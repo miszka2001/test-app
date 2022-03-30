@@ -14,5 +14,10 @@ To run this app you’ll need one of the popular IDE like Pycharm. You can downl
 
 ## IMPORTANT
 
-Message pattern must look like this: ’{"expression":"YOUR MATHEMATICAL EXPRESSION”}’. If you don’t put expression string as a key then the app will not work. Floor division and exponentiation don’t work.
-
+Message pattern must look like this: ’{"expression":"YOUR MATHEMATICAL EXPRESSION”}’. If you don’t put expression string as a key then the app will not work. Supported operations:
+- "+" - addition
+- "-" - subtraction
+- "/" - division
+- "*" - multiplication
+- "(" - left parenthesis
+- ")" - right parenthesis
