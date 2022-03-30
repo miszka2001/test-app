@@ -7,6 +7,7 @@ app = Flask(__name__)
 @app.route('/evaluate', methods=['POST'])
 def calculations():
     letters = set(string.ascii_lowercase + string.ascii_uppercase)
+    forbidden_characters = ";:,?'|!@#$%^&_][{}£§."
     request_data = request.get_json()
     output = request_data['expression']
     error_msg = jsonify(error='validation error')
@@ -18,8 +19,8 @@ def calculations():
     for item in output:
         if item in letters:
             return error_msg
-        else:
-            continue
+        elif item in forbidden_characters:
+            return error_msg
 
     output = round((eval(output)))
     return jsonify(result=output)
