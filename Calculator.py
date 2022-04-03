@@ -196,7 +196,7 @@ def calculations():
         if mathematical_op_tier_2[0] in part_1 or mathematical_op_tier_2[1] in part_1:
             output = div_multi_cal(part_1)
 
-            if mathematical_op_tier_1[0] in holder or mathematical_op_tier_1[1] in holder:
+            if mathematical_op_tier_1[0] in part_1 or mathematical_op_tier_1[1] in part_1:
                 part_2 = minus_plus_in_div_multi(part_1)
                 output = plus_minus_cal(part_2)
 
