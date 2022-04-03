@@ -5,6 +5,7 @@ from flask import Flask, jsonify, request
 app = Flask(__name__)
 
 
+# Functions for calculations
 @ray.remote
 def small_calculations(x):
     return eval(x)
@@ -40,7 +41,6 @@ def plus_minus_cal(holder_f) -> str:
         return str(eval(brackets_handler_f[0]))
     else:
         brackets_score_f = ray.get([map_r.remote(i, map_func) for i in additional_helper_f])
-        print(brackets_score_f, 'f')
         for i in range(len(brackets_handler_f)):
             if len(brackets_handler_f[i]) > 1:
                 if "+" in brackets_handler_f[i]:
@@ -55,6 +55,66 @@ def plus_minus_cal(holder_f) -> str:
                 continue
         second_stage_of_calculation_f = ''.join(map(str, brackets_handler_f))
         return plus_minus_cal(second_stage_of_calculation_f)
+
+
+def div_multi_cal(holder_f):
+    brackets_handler_f = []
+    additional_helper_f = []
+    x = ""
+    for k, item in enumerate(holder_f):
+        if k == len(holder_f) - 1:
+            x += item
+            brackets_handler_f.append(x)
+        if x.count('*') == 1 or x.count('/') == 1:
+            if item.isdigit():
+                x += item
+            else:
+                brackets_handler_f.append(x)
+                brackets_handler_f.append(item)
+                additional_helper_f.append(x)
+                x = ""
+        else:
+            x += item
+
+    if len(additional_helper_f) == 0:
+        return str(round(eval(brackets_handler_f[0])))
+    else:
+        brackets_score_f = ray.get([map_r.remote(i, map_func) for i in additional_helper_f])
+        for i in range(len(brackets_handler_f)):
+            if len(brackets_handler_f[i]) > 1:
+                if "*" in brackets_handler_f[i]:
+                    brackets_handler_f[i] = brackets_score_f[0]
+                    brackets_score_f.remove(brackets_score_f[0])
+                elif "/" in brackets_handler_f[i]:
+                    brackets_handler_f[i] = brackets_score_f[0]
+                    brackets_score_f.remove(brackets_score_f[0])
+            if len(brackets_score_f) == 0:
+                break
+            else:
+                continue
+        second_stage_of_calculation_f = ''.join(map(str, brackets_handler_f))
+        if '*' in second_stage_of_calculation_f:
+            return div_multi_cal(second_stage_of_calculation_f)
+        elif '/' in second_stage_of_calculation_f:
+            return div_multi_cal(second_stage_of_calculation_f)
+
+
+def minus_plus_in_div_multi(holder_f):
+    helper = []
+    x = 0
+    magazine = ""
+    for i in range(len(holder_f)):
+        if holder_f[i] == "+" or holder_f == '-':
+            helper.append(magazine)
+            helper.append(holder_f[i])
+            magazine = ""
+        else:
+            magazine += holder_f[i]
+    helper.append(magazine)
+    for i in range(len(helper)):
+        if "*" in helper[i] or "/" in helper[i]:
+            helper[i] = div_multi_cal(helper[i])
+    return "".join(helper)
 
 
 @app.route('/evaluate', methods=['POST'])
@@ -148,52 +208,11 @@ def calculations():
             output = f"{storage[0]}{holder[pointer]}{storage[1]}"
     elif mathematical_op_tier_2[0] in holder or mathematical_op_tier_2[1] in holder:
         if mathematical_op_tier_1[0] in holder or mathematical_op_tier_1[1] in holder:
-            while flag:
-                if holder[pointer] == '+' or holder[pointer] == "-":
-                    flag = False
-                elif pointer == len(holder) - 1:
-                    flag = False
-                else:
-                    pointer += 1
-            flag = True
-            if holder[pointer] != '+' or holder[pointer] != '-':
-                while flag:
-                    if holder[pointer] == '+' or holder[pointer] == "-":
-                        flag = False
-                    elif pointer == 0:
-                        flag = False
-                    else:
-                        pointer -= 1
-            for i in range(0, pointer):
-                left_side_exp += holder[i]
-            for i in range(pointer + 1, len(holder)):
-                right_side_exp += holder[i]
-            storage = ray.get([small_calculations.remote(left_side_exp), small_calculations.remote(right_side_exp)])
-            output = f"{storage[0]}{holder[pointer]}{storage[1]}"
+            part_1 = minus_plus_in_div_multi(holder)
+            output = plus_minus_cal(part_1)
 
         elif mathematical_op_tier_2[0] in holder or mathematical_op_tier_2[1] in holder:
-            while flag:
-                if holder[pointer] == '*' or holder[pointer] == "/":
-                    flag = False
-                elif pointer == len(holder) - 1:
-                    flag = False
-                else:
-                    pointer += 1
-            flag = True
-            if holder[pointer] != '*' or holder[pointer] != '/':
-                while flag:
-                    if holder[pointer] == '*' or holder[pointer] == "/":
-                        flag = False
-                    elif pointer == 0:
-                        flag = False
-                    else:
-                        pointer -= 1
-            for i in range(0, pointer):
-                left_side_exp += holder[i]
-            for i in range(pointer + 1, len(holder)):
-                right_side_exp += holder[i]
-            storage = ray.get([small_calculations.remote(left_side_exp), small_calculations.remote(right_side_exp)])
-            output = f"{storage[0]}{holder[pointer]}{storage[1]}"
+            output = div_multi_cal(holder)
     elif mathematical_op_tier_1[0] in holder or mathematical_op_tier_1[1] in holder:
         output = plus_minus_cal(holder)
 
