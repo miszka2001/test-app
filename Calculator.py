@@ -10,6 +10,53 @@ def small_calculations(x):
     return eval(x)
 
 
+@ray.remote
+def map_r(array, f):
+    return f(array)
+
+
+map_func = lambda i: eval(i)
+
+
+def plus_minus_cal(holder_f) -> str:
+    brackets_handler_f = []
+    additional_helper_f = []
+    x = ""
+    for k, item in enumerate(holder_f):
+        if k == len(holder_f) - 1:
+            x += item
+            brackets_handler_f.append(x)
+        if x.count('-') == 1 or x.count('+') == 1:
+            if item.isdigit():
+                x += item
+            else:
+                brackets_handler_f.append(x)
+                brackets_handler_f.append(item)
+                additional_helper_f.append(x)
+                x = ""
+        else:
+            x += item
+    if len(additional_helper_f) == 0:
+        return str(eval(brackets_handler_f[0]))
+    else:
+        brackets_score_f = ray.get([map_r.remote(i, map_func) for i in additional_helper_f])
+        print(brackets_score_f, 'f')
+        for i in range(len(brackets_handler_f)):
+            if len(brackets_handler_f[i]) > 1:
+                if "+" in brackets_handler_f[i]:
+                    brackets_handler_f[i] = brackets_score_f[0]
+                    brackets_score_f.remove(brackets_score_f[0])
+                elif "-" in brackets_handler_f[i]:
+                    brackets_handler_f[i] = brackets_score_f[0]
+                    brackets_score_f.remove(brackets_score_f[0])
+            if len(brackets_score_f) == 0:
+                break
+            else:
+                continue
+        second_stage_of_calculation_f = ''.join(map(str, brackets_handler_f))
+        return plus_minus_cal(second_stage_of_calculation_f)
+
+
 @app.route('/evaluate', methods=['POST'])
 def calculations():
     # Variables for validation
@@ -51,11 +98,11 @@ def calculations():
     right_side_exp = ""
     flag = True
     flag_2 = True
+    output = 0
     x = 0
     y = 0
 
     if brackets_tier_3[0] in holder or brackets_tier_3[1] in holder:
-        print('gruppe_1')
         if mathematical_op_tier_2[0] in holder or mathematical_op_tier_2[1] in holder:
             if mathematical_op_tier_1[0] in holder or mathematical_op_tier_1[1] in holder:
                 while holder[pointer] != '+' or holder[pointer] != '-':
@@ -147,32 +194,10 @@ def calculations():
                 right_side_exp += holder[i]
             storage = ray.get([small_calculations.remote(left_side_exp), small_calculations.remote(right_side_exp)])
             output = f"{storage[0]}{holder[pointer]}{storage[1]}"
-    elif mathematical_op_tier_1[0] in holder or mathematical_op_tier_1[1]:
-        while flag:
-            if holder[pointer] == '+' or holder[pointer] == "-":
-                flag = False
-            elif pointer == len(holder) - 1:
-                flag = False
-            else:
-                pointer += 1
-        flag = True
-        if holder[pointer] != '+' or holder[pointer] != '-':
-            while flag:
-                if holder[pointer] == '+' or holder[pointer] == "-":
-                    flag = False
-                elif pointer == 0:
-                    flag = False
-                else:
-                    pointer -= 1
-        for i in range(0, pointer):
-            left_side_exp += holder[i]
-        for i in range(pointer + 1, len(holder)):
-            right_side_exp += holder[i]
-        storage = ray.get([small_calculations.remote(left_side_exp), small_calculations.remote(right_side_exp)])
-        output = f"{storage[0]}{holder[pointer]}{storage[1]}"
+    elif mathematical_op_tier_1[0] in holder or mathematical_op_tier_1[1] in holder:
+        output = plus_minus_cal(holder)
 
-    output_1 = round((eval(output)))
-    return jsonify(result=output_1)
+    return jsonify(result=output)
 
 
 if __name__ == '__main__':
