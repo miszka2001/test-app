@@ -117,6 +117,42 @@ def minus_plus_in_div_multi(holder_f):
     return "".join(helper)
 
 
+def brackets(holder_f):
+    helper = ""
+    x = 0
+    storage_all = []
+    storage_b = []
+    for i in range(len(holder_f)):
+        if x > i:
+            continue
+        if holder_f[i] == "(":
+            helper += holder_f[i]
+            x = i
+            flag = True
+            while flag:
+                if ")" not in helper:
+                    x += 1
+                    helper += holder_f[x]
+                else:
+                    flag = False
+            storage_all.append(helper)
+            storage_b.append(helper)
+            helper = ""
+        else:
+            print(holder_f[i])
+            storage_all.append(holder_f[i])
+    while ")" in storage_all:
+        storage_all.remove(")")
+    storage_b_score = ray.get([map_r.remote(i, map_func) for i in storage_b])
+    for i in range(len(storage_all)):
+        if len(storage_all) == 0:
+            break
+        elif "(" in storage_all[i]:
+            storage_all[i] = str(storage_b_score[0])
+            storage_b_score.remove(storage_b_score[0])
+    return "".join(storage_all)
+
+
 @app.route('/evaluate', methods=['POST'])
 def calculations():
     # Variables for validation
@@ -153,59 +189,19 @@ def calculations():
     brackets_tier_3 = "()"
     mathematical_op_tier_2 = "/*"
     mathematical_op_tier_1 = "+-"
-    pointer = int((len(holder) - 1) / 2)
-    left_side_exp = ""
-    right_side_exp = ""
-    flag = True
-    flag_2 = True
     output = 0
-    x = 0
-    y = 0
 
     if brackets_tier_3[0] in holder or brackets_tier_3[1] in holder:
-        if mathematical_op_tier_2[0] in holder or mathematical_op_tier_2[1] in holder:
+        part_1 = brackets(holder)
+        if mathematical_op_tier_2[0] in part_1 or mathematical_op_tier_2[1] in part_1:
+            output = div_multi_cal(part_1)
+
             if mathematical_op_tier_1[0] in holder or mathematical_op_tier_1[1] in holder:
-                while holder[pointer] != '+' or holder[pointer] != '-':
-                    pointer += 1
-                    if holder[pointer] == "(":
-                        pass
-            else:
-                pass
+                part_2 = minus_plus_in_div_multi(part_1)
+                output = plus_minus_cal(part_2)
+
         elif mathematical_op_tier_1[0] in holder or mathematical_op_tier_1[1] in holder:
-            while flag:
-                print(holder[pointer])
-                if holder[pointer] == '+' or holder[pointer] == "-":
-                    x = pointer
-                    y = pointer
-                    while flag_2:
-                        print('a')
-                        x += 1
-                        if holder[x] == ')':
-                            pointer = x
-                            flag_2 = False
-                        elif holder[x] == "(":
-                            pointer = y
-                            flag = False
-                            flag_2 = False
-                elif pointer == len(holder) - 1:
-                    flag = False
-                else:
-                    pointer += 1
-            flag = True
-            if holder[pointer] != '+' or holder[pointer] != '-':
-                while flag:
-                    if holder[pointer] == '+' or holder[pointer] == "-":
-                        flag = False
-                    elif pointer == 0:
-                        flag = False
-                    else:
-                        pointer -= 1
-            for i in range(0, pointer):
-                left_side_exp += holder[i]
-            for i in range(pointer + 1, len(holder)):
-                right_side_exp += holder[i]
-            storage = ray.get([small_calculations.remote(left_side_exp), small_calculations.remote(right_side_exp)])
-            output = f"{storage[0]}{holder[pointer]}{storage[1]}"
+            output = plus_minus_cal(part_1)
     elif mathematical_op_tier_2[0] in holder or mathematical_op_tier_2[1] in holder:
         if mathematical_op_tier_1[0] in holder or mathematical_op_tier_1[1] in holder:
             part_1 = minus_plus_in_div_multi(holder)
