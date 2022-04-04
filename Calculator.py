@@ -20,79 +20,79 @@ map_func = lambda i: eval(i)
 
 
 def plus_minus_cal(holder_f) -> str:
-    brackets_handler_f = []
-    additional_helper_f = []
+    all_characters = []
+    selected_math_exp = []
     x = ""
     for k, item in enumerate(holder_f):
         if k == len(holder_f) - 1:
             x += item
-            brackets_handler_f.append(x)
+            all_characters.append(x)
         if x.count('-') == 1 or x.count('+') == 1:
             if item.isdigit() or item == ".":
                 x += item
             else:
-                brackets_handler_f.append(x)
-                brackets_handler_f.append(item)
-                additional_helper_f.append(x)
+                all_characters.append(x)
+                all_characters.append(item)
+                selected_math_exp.append(x)
                 x = ""
         else:
             x += item
-    if len(additional_helper_f) == 0:
-        return str(eval(brackets_handler_f[0]))
+    if len(selected_math_exp) == 0:
+        return str(eval(all_characters[0]))
     else:
-        brackets_score_f = ray.get([map_r.remote(i, map_func) for i in additional_helper_f])
-        for i in range(len(brackets_handler_f)):
-            if len(brackets_handler_f[i]) > 1:
-                if "+" in brackets_handler_f[i]:
-                    brackets_handler_f[i] = brackets_score_f[0]
+        brackets_score_f = ray.get([map_r.remote(i, map_func) for i in selected_math_exp])
+        for i in range(len(all_characters)):
+            if len(all_characters[i]) > 1:
+                if "+" in all_characters[i]:
+                    all_characters[i] = brackets_score_f[0]
                     brackets_score_f.remove(brackets_score_f[0])
-                elif "-" in brackets_handler_f[i]:
-                    brackets_handler_f[i] = brackets_score_f[0]
+                elif "-" in all_characters[i]:
+                    all_characters[i] = brackets_score_f[0]
                     brackets_score_f.remove(brackets_score_f[0])
             if len(brackets_score_f) == 0:
                 break
             else:
                 continue
-        second_stage_of_calculation_f = ''.join(map(str, brackets_handler_f))
+        second_stage_of_calculation_f = ''.join(map(str, all_characters))
         return plus_minus_cal(second_stage_of_calculation_f)
 
 
 def div_multi_cal(holder_f):
-    brackets_handler_f = []
-    additional_helper_f = []
+    all_characters = []
+    selected_math_exp = []
     x = ""
     for k, item in enumerate(holder_f):
         if k == len(holder_f) - 1:
             x += item
-            brackets_handler_f.append(x)
+            all_characters.append(x)
         if x.count('*') == 1 or x.count('/') == 1:
             if item.isdigit() or item == ".":
                 x += item
             else:
-                brackets_handler_f.append(x)
-                brackets_handler_f.append(item)
-                additional_helper_f.append(x)
+                all_characters.append(x)
+                all_characters.append(item)
+                selected_math_exp.append(x)
                 x = ""
         else:
             x += item
 
-    if len(additional_helper_f) == 0:
-        return str(round(eval(brackets_handler_f[0])))
+    if len(selected_math_exp) == 0:
+        return str(round(eval(all_characters[0])))
     else:
-        brackets_score_f = ray.get([map_r.remote(i, map_func) for i in additional_helper_f])
-        for i in range(len(brackets_handler_f)):
-            if len(brackets_handler_f[i]) > 1:
-                if "*" in brackets_handler_f[i]:
-                    brackets_handler_f[i] = brackets_score_f[0]
+        brackets_score_f = ray.get([map_r.remote(i, map_func) for i in selected_math_exp])
+        for i in range(len(all_characters)):
+            if len(all_characters[i]) > 1:
+                if "*" in all_characters[i]:
+                    all_characters[i] = brackets_score_f[0]
                     brackets_score_f.remove(brackets_score_f[0])
-                elif "/" in brackets_handler_f[i]:
-                    brackets_handler_f[i] = brackets_score_f[0]
+                elif "/" in all_characters[i]:
+                    all_characters[i] = brackets_score_f[0]
                     brackets_score_f.remove(brackets_score_f[0])
             if len(brackets_score_f) == 0:
                 break
             else:
                 continue
-        second_stage_of_calculation_f = ''.join(map(str, brackets_handler_f))
+        second_stage_of_calculation_f = ''.join(map(str, all_characters))
         if '*' in second_stage_of_calculation_f:
             return div_multi_cal(second_stage_of_calculation_f)
         elif '/' in second_stage_of_calculation_f:
@@ -170,6 +170,7 @@ def calculations():
     forbidden_letters = set(string.ascii_lowercase + string.ascii_uppercase)
     forbidden_characters = ";:,?'|!@#$%^&_][{}£§"
     mathematical_op_for_ver = "+-/*"
+    mat_loop = ['**', "//", "-+", "+-", "*/", "/*", "-/", "/-", "/+", "+/", "+*", "*+", "-*", "*-", ".."]
     request_data = request.get_json()
     error_msg = jsonify(error='validation error')
     if 'expression' in request_data:
@@ -177,14 +178,11 @@ def calculations():
     else:
         return error_msg
 
-    if '**' in holder:
-        return error_msg
-    elif '//' in holder:
-        return error_msg
-    elif '..' in holder:
-        return error_msg
-    elif holder.endswith('.') or holder.startswith('.'):
-        return error_msg
+    for item in mat_loop:
+        if item in holder:
+            return error_msg
+        else:
+            continue
 
     for item in mathematical_op_for_ver:
         if holder.endswith(item) or holder.startswith(item):
@@ -218,12 +216,12 @@ def calculations():
                 part_2 = minus_plus_in_div_multi(part_1)
                 output = plus_minus_cal(part_2)
 
-        elif mathematical_op_tier_1[0] in holder or mathematical_op_tier_1[1] in holder:
+        elif mathematical_op_tier_1[0] in part_1 or mathematical_op_tier_1[1] in part_1:
             output = plus_minus_cal(part_1)
     elif mathematical_op_tier_2[0] in holder or mathematical_op_tier_2[1] in holder:
         if mathematical_op_tier_1[0] in holder or mathematical_op_tier_1[1] in holder:
-            part_1 = minus_plus_in_div_multi(holder)
-            output = plus_minus_cal(part_1)
+            output_part = minus_plus_in_div_multi(holder)
+            output = plus_minus_cal(output_part)
 
         elif mathematical_op_tier_2[0] in holder or mathematical_op_tier_2[1] in holder:
             output = div_multi_cal(holder)
