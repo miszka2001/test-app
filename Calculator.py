@@ -7,11 +7,6 @@ app = Flask(__name__)
 
 # Functions for calculations
 @ray.remote
-def small_calculations(x):
-    return eval(x)
-
-
-@ray.remote
 def map_r(array, f):
     return f(array)
 
@@ -77,7 +72,7 @@ def div_multi_cal(holder_f: str) -> str:
             x += item
 
     if len(selected_math_exp) == 0:
-        return str(round(eval(all_characters[0])))
+        return str(eval(all_characters[0]))
     else:
         brackets_score_f = ray.get([map_r.remote(i, map_func) for i in selected_math_exp])
         for i in range(len(all_characters)):
@@ -242,7 +237,6 @@ def calculations():
                     else:
                         return error_msg
 
-
     for i, item in enumerate(holder):
         if item in forbidden_letters:
             return error_msg
@@ -259,6 +253,8 @@ def calculations():
     mathematical_op_tier_2 = "/*"
     mathematical_op_tier_1 = "+-"
     output = 0
+    out_1 = 0
+    out_2 = 0
 
     if brackets_tier_3[0] in holder or brackets_tier_3[1] in holder:
         part_1 = brackets(holder)
@@ -280,8 +276,11 @@ def calculations():
             output = div_multi_cal(holder)
     elif mathematical_op_tier_1[0] in holder or mathematical_op_tier_1[1] in holder:
         output = plus_minus_cal(holder)
-    else:
-        return jsonify(result=error_msg)
+
+    try:
+        output = int(output)
+    except ValueError:
+        output = float(output)
 
     return jsonify(result=output)
 
