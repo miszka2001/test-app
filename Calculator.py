@@ -182,16 +182,25 @@ def brackets_validator(s):
 @app.route('/evaluate', methods=['POST'])
 def calculations():
     # Variables for validation
+    counter_for_val = 0
     s_for_brackets = ""
     forbidden_letters = set(string.ascii_lowercase + string.ascii_uppercase)
     forbidden_characters = ";:,?'|!@#$%^&_][{}£§"
     mathematical_op_for_ver = "+-/*"
+    math_arr = ["*", "/", "+", "-"]
     mat_loop = ['**', "//", "-+", "+-", "*/", "/*", "-/", "/-", "/+", "+/", "+*", "*+", "-*", "*-", ".."]
     request_data = request.get_json()
     error_msg = jsonify(error='validation error')
     if 'expression' in request_data:
         holder = request_data['expression']
     else:
+        return error_msg
+
+    for item in holder:
+        if item in math_arr:
+            counter_for_val += 1
+
+    if counter_for_val == 0:
         return error_msg
 
     for item in mat_loop:
