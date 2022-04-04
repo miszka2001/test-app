@@ -169,6 +169,7 @@ def calculations():
     # Variables for validation
     forbidden_letters = set(string.ascii_lowercase + string.ascii_uppercase)
     forbidden_characters = ";:,?'|!@#$%^&_][{}£§"
+    mathematical_op_for_ver = "+-/*"
     request_data = request.get_json()
     error_msg = jsonify(error='validation error')
     if 'expression' in request_data:
@@ -184,6 +185,12 @@ def calculations():
         return error_msg
     elif holder.endswith('.') or holder.startswith('.'):
         return error_msg
+
+    for item in mathematical_op_for_ver:
+        if holder.endswith(item) or holder.startswith(item):
+            return error_msg
+        else:
+            continue
 
     for i, item in enumerate(holder):
         if item in forbidden_letters:
