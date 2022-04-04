@@ -19,7 +19,7 @@ def map_r(array, f):
 map_func = lambda i: eval(i)
 
 
-def plus_minus_cal(holder_f) -> str:
+def plus_minus_cal(holder_f: str) -> str:
     all_characters = []
     selected_math_exp = []
     x = ""
@@ -57,7 +57,7 @@ def plus_minus_cal(holder_f) -> str:
         return plus_minus_cal(second_stage_of_calculation_f)
 
 
-def div_multi_cal(holder_f):
+def div_multi_cal(holder_f: str) -> str:
     all_characters = []
     selected_math_exp = []
     x = ""
@@ -99,7 +99,7 @@ def div_multi_cal(holder_f):
             return div_multi_cal(second_stage_of_calculation_f)
 
 
-def minus_plus_in_div_multi(holder_f):
+def minus_plus_in_div_multi(holder_f: str) -> str:
     helper = []
     x = 0
     magazine = ""
@@ -117,7 +117,7 @@ def minus_plus_in_div_multi(holder_f):
     return "".join(helper)
 
 
-def brackets(holder_f):
+def brackets(holder_f: str) -> str:
     helper = ""
     x = 0
     storage_all = []
@@ -164,9 +164,25 @@ def brackets(holder_f):
     return "".join(storage_all)
 
 
+def brackets_validator(s):
+    c = 0
+    flag = False
+    for i in s:
+        if i == "(":
+            c += 1
+        elif i == ")":
+            c -= 1
+        if c < 0:
+            return flag
+    if c == 0:
+        return not flag
+    return flag
+
+
 @app.route('/evaluate', methods=['POST'])
 def calculations():
     # Variables for validation
+    s_for_brackets = ""
     forbidden_letters = set(string.ascii_lowercase + string.ascii_uppercase)
     forbidden_characters = ";:,?'|!@#$%^&_][{}£§"
     mathematical_op_for_ver = "+-/*"
@@ -189,6 +205,34 @@ def calculations():
             return error_msg
         else:
             continue
+
+    if ")" in holder or "(" in holder:
+        for item in holder:
+            if item == ")" or item == "(":
+                s_for_brackets += item
+        t_for_v = brackets_validator(s_for_brackets)
+        if not t_for_v:
+            return error_msg
+        for k, item in enumerate(holder):
+            if k == 0 or k == len(holder) - 1:
+                continue
+            elif item == "(":
+                if holder[k - 1] == "(":
+                    continue
+                else:
+                    if holder[k - 1] in mathematical_op_for_ver:
+                        continue
+                    else:
+                        return error_msg
+            elif item == ")":
+                if holder[k + 1] == ")":
+                    continue
+                else:
+                    if holder[k + 1] in mathematical_op_for_ver:
+                        continue
+                    else:
+                        return error_msg
+
 
     for i, item in enumerate(holder):
         if item in forbidden_letters:
@@ -227,6 +271,8 @@ def calculations():
             output = div_multi_cal(holder)
     elif mathematical_op_tier_1[0] in holder or mathematical_op_tier_1[1] in holder:
         output = plus_minus_cal(holder)
+    else:
+        return jsonify(result=error_msg)
 
     return jsonify(result=output)
 
