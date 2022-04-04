@@ -28,7 +28,7 @@ def plus_minus_cal(holder_f) -> str:
             x += item
             brackets_handler_f.append(x)
         if x.count('-') == 1 or x.count('+') == 1:
-            if item.isdigit():
+            if item.isdigit() or item == ".":
                 x += item
             else:
                 brackets_handler_f.append(x)
@@ -66,7 +66,7 @@ def div_multi_cal(holder_f):
             x += item
             brackets_handler_f.append(x)
         if x.count('*') == 1 or x.count('/') == 1:
-            if item.isdigit():
+            if item.isdigit() or item == ".":
                 x += item
             else:
                 brackets_handler_f.append(x)
@@ -122,6 +122,7 @@ def brackets(holder_f):
     x = 0
     storage_all = []
     storage_b = []
+    counter = 0
     for i in range(len(holder_f)):
         if x > i:
             continue
@@ -131,18 +132,28 @@ def brackets(holder_f):
             flag = True
             while flag:
                 if ")" not in helper:
+                    counter = helper.count("(")
                     x += 1
                     helper += holder_f[x]
                 else:
+                    if counter > 1:
+                        while counter != helper.count(")"):
+                            counter = helper.count("(")
+                            x += 1
+                            helper += holder_f[x]
                     flag = False
             storage_all.append(helper)
             storage_b.append(helper)
             helper = ""
         else:
-            print(holder_f[i])
             storage_all.append(holder_f[i])
     while ")" in storage_all:
         storage_all.remove(")")
+    for i in range(len(storage_b)):
+        if storage_b[i].count(")") > 1:
+            x = storage_b[i][1:-1]
+            storage_b[i] = brackets(x)
+
     storage_b_score = ray.get([map_r.remote(i, map_func) for i in storage_b])
     for i in range(len(storage_all)):
         if len(storage_all) == 0:
