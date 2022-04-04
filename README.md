@@ -1,6 +1,6 @@
 # Overview
 
-This simple project has been created for the recruitment purposes. It is a calculator which takes as an input HTTP POST request with mathematical equation (for example {’’expression’’:”2+2”}) and gives back an evaluated result of the equation in form of HTTP response.
+This simple project has been created for the recruitment purposes. It is a calculator which takes as an input HTTP POST request with mathematical equation (for example {’’expression’’:”2+2”}) and does calculations in parallel and gives back an evaluated result of the equation in form of HTTP response.
 
 ## Technologies used:
 - Python 3.8.3
