@@ -240,6 +240,8 @@ def brackets_validator(s: str) -> bool:
 @app.route('/evaluate', methods=['POST'])
 def calculations():
     # Variables for validation
+    characters_checker = []
+    x = ""
     counter_for_val = 0
     s_for_brackets = ""
     forbidden_letters = set(string.ascii_lowercase + string.ascii_uppercase)
@@ -254,14 +256,26 @@ def calculations():
         holder = request_data['expression']
     else:
         return error_msg
-    # checks if mathematical operator in input
+
+    # Characters validation
+    for item in holder:
+        if not item.isdigit():
+            x += " "
+        else:
+            x += item
+    characters_checker = x.split(" ")
+    for item in characters_checker:
+        if item.startswith("0") and len(item) > 1:
+            return error_msg
+
+    # Checks if mathematical operator in input
     for item in holder:
         if item in math_arr:
             counter_for_val += 1
 
     if counter_for_val == 0:
         return error_msg
-    # checks if mathematical operators are validated
+    # Checks if mathematical operators are validated
     for item in mat_loop:
         if item in holder:
             return error_msg
@@ -273,7 +287,7 @@ def calculations():
             return error_msg
         else:
             continue
-    # checks if brackets are validated
+    # Checks if brackets are validated
     if ")" in holder or "(" in holder:
         for item in holder:
             if item == ")" or item == "(":
@@ -300,7 +314,7 @@ def calculations():
                         continue
                     else:
                         return error_msg
-    # checks if letters are in input
+    # Checks if letters are in input
     for i, item in enumerate(holder):
         if item in forbidden_letters:
             return error_msg
@@ -339,7 +353,7 @@ def calculations():
             output = div_multi_cal(holder)
     elif mathematical_op_tier_1[0] in holder or mathematical_op_tier_1[1] in holder:
         output = plus_minus_cal(holder)
-    # changes type of an output to in int or float
+    # Changes type of an output to in int or float
     try:
         output = int(output)
     except ValueError:
