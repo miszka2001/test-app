@@ -17,18 +17,25 @@ def plus_minus_cal(holder_f: str) -> str:
     selected_math_exp = []
     x = ""
     if "-" in holder_f and "+" in holder_f:
-        pass
-        if "--" in holder_f or "-+" in holder_f:
+        if "--" in holder_f or "-+" in holder_f or "+-" in holder_f:
             holder_f.replace("--", "+")
-            holder_f.replace("-+", "+")
+            holder_f.replace("-+", "-")
+            holder_f.replace("+-", "-")
+        else:
+            if holder_f.count("-") == 1 and holder_f[0] != "-":
+                arr_for_parallel = holder_f.split()
+                arr_for_parallel[0] = arr_for_parallel[0]
+                return "".join(arr_for_parallel)
+            else:
+                return str(eval(holder_f))
     elif "-" in holder_f and "+" not in holder_f:
         return str(eval(holder_f))
-
+    # If pluses only in holder_f
     for k, item in enumerate(holder_f):
         if k == len(holder_f) - 1:
             x += item
             all_characters.append(x)
-        if x.count('+') == 1:
+        if x.count("+") == 1:
             if item.isdigit() or item == ".":
                 x += item
             else:
@@ -54,7 +61,7 @@ def plus_minus_cal(holder_f: str) -> str:
                 break
             else:
                 continue
-        second_stage_of_calculation_f = ''.join(map(str, all_characters))
+        second_stage_of_calculation_f = "".join(map(str, all_characters))
         return plus_minus_cal(second_stage_of_calculation_f)
 
 
@@ -112,7 +119,7 @@ def div_multi_cal(holder_f: str) -> str:
         if k == len(holder_f) - 1:
             x += item
             all_characters.append(x)
-        if x.count('*') == 1 or x.count('/') == 1:
+        if x.count("*") == 1 or x.count("/") == 1:
             if item.isdigit() or item == ".":
                 x += item
             else:
@@ -149,9 +156,9 @@ def div_multi_cal(holder_f: str) -> str:
                 continue
         second_stage_of_calculation_f = ''.join(map(str, all_characters))
 
-        if '*' in second_stage_of_calculation_f:
+        if "*" in second_stage_of_calculation_f:
             return div_multi_cal(second_stage_of_calculation_f)
-        elif '/' in second_stage_of_calculation_f:
+        elif "/" in second_stage_of_calculation_f:
             return div_multi_cal(second_stage_of_calculation_f)
 
     # Special function for isolation / and * from +-
@@ -161,7 +168,7 @@ def minus_plus_in_div_multi(holder_f: str) -> str:
     helper = []
     magazine = ""
     for i in range(len(holder_f)):
-        if holder_f[i] == "+" or holder_f == '-':
+        if holder_f[i] == "+" or holder_f == "-":
             helper.append(magazine)
             helper.append(holder_f[i])
             magazine = ""
@@ -210,8 +217,11 @@ def brackets(holder_f: str) -> str:
         if storage_b[i].count(")") > 1:
             x = storage_b[i][1:-1]
             storage_b[i] = brackets(x)
+    if len(storage_all) == 1 and len(storage_b) == 1:
+        return brackets(holder_f[1:-1])
 
     storage_b_score = ray.get([map_r.remote(i, lambda z: eval(z)) for i in storage_b])
+
     for i in range(len(storage_all)):
         if len(storage_all) == 0:
             break
@@ -240,7 +250,6 @@ def brackets_validator(s: str) -> bool:
 @app.route('/evaluate', methods=['POST'])
 def calculations():
     # Variables for validation
-    characters_checker = []
     x = ""
     counter_for_val = 0
     s_for_brackets = ""
@@ -314,13 +323,14 @@ def calculations():
                         continue
                     else:
                         return error_msg
+
     # Checks if letters are in input
     for i, item in enumerate(holder):
         if item in forbidden_letters:
             return error_msg
         elif item in forbidden_characters:
             return error_msg
-        elif item == '.':
+        elif item == ".":
             try:
                 int(holder[i - 1])
                 int(holder[i + 1])
@@ -353,7 +363,7 @@ def calculations():
             output = div_multi_cal(holder)
     elif mathematical_op_tier_1[0] in holder or mathematical_op_tier_1[1] in holder:
         output = plus_minus_cal(holder)
-    # Changes type of an output to in int or float
+    # Changes type of an output to int or float
     try:
         output = int(output)
     except ValueError:
