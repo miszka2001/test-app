@@ -23,9 +23,9 @@ def plus_minus_cal(holder_f: str) -> str:
             holder_f.replace("+-", "-")
         else:
             if holder_f.count("-") == 1 and holder_f[0] != "-":
-                arr_for_parallel = holder_f.split()
-                arr_for_parallel[0] = arr_for_parallel[0]
-                return "".join(arr_for_parallel)
+                arr_for_parallel = holder_f.split("-")
+                arr_for_parallel[0] = plus_minus_cal(arr_for_parallel[0])
+                return str(eval("".join(arr_for_parallel)))
             else:
                 return str(eval(holder_f))
     elif "-" in holder_f and "+" not in holder_f:
