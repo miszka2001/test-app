@@ -1,10 +1,11 @@
 # Overview
 
-This simple project has been created for the recruitment purposes. It is a calculator which takes as an input HTTP POST request with mathematical equation (for example {’’expression’’:”2+2”}) and gives back an evaluated result of the equation in form of HTTP response.
+This simple project has been created for the recruitment purposes. It is a calculator which takes as an input HTTP POST request with mathematical equation (for example {’’expression’’:”2+2”}) and does calculations in parallel and gives back an evaluated result of the equation in form of HTTP response.
 
 ## Technologies used:
 - Python 3.8.3
 - Flask 2.1.0 
+- Ray 1.11.0
 ## How to run:
 
 To run this app you’ll need one of the popular IDEs like Pycharm. You can download the python file from GitHub and open it by using IDE or create new python file on your device and just copy paste the code to it. After that you have to download flask framework to your virtual environment, the simplest way to do that is by using pip. You run the app and copy the link which will poop out down below. Then now you have to options:
