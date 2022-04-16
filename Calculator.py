@@ -67,6 +67,14 @@ def plus_minus_cal(holder_f: str) -> str:
 
 
 def div_multi_cal(holder_f: str) -> str:
+    if "/0" in holder_f or holder_f[0] == "0":
+        return "error"
+    elif "0/" in holder_f:
+        for k, i in enumerate(holder_f):
+            if i == "/":
+                if holder_f[k-1] == "0":
+                    if not holder_f[k-2].isdigit():
+                        return "error"
     all_characters = []
     selected_math_exp = []
     helper_2 = []
@@ -229,6 +237,15 @@ def brackets(holder_f: str) -> str:
         elif "(" in storage_all[i]:
             storage_all[i] = str(storage_b_score[0])
             storage_b_score.remove(storage_b_score[0])
+    zero_division_error_checker = "".join(storage_all)
+    if "/0" in zero_division_error_checker or zero_division_error_checker[0] == "0":
+        return "error"
+    elif "0/" in zero_division_error_checker:
+        for k, i in enumerate(zero_division_error_checker):
+            if i == "/":
+                if zero_division_error_checker[k-1] == "0":
+                    if not zero_division_error_checker[k-2].isdigit():
+                        return "error"
     return "".join(storage_all)
 
 
@@ -258,7 +275,7 @@ def calculations():
     forbidden_characters = ";:,?'|!@#$%^&_][{}£§"
     mathematical_op_for_ver = "+-/*"
     math_arr = ["*", "/", "+", "-"]
-    mat_loop = ['**', "//", "-+", "+-", "*/", "/*", "-/",
+    mat_loop = ['**', "//", "-+", "*/", "/*", "-/", "/0",
                 "/-", "/+", "+/", "+*", "*+", "-*", "*-", "..", "--", "++"]
     request_data = request.get_json()
     error_msg = jsonify(error='validation error')
@@ -268,6 +285,8 @@ def calculations():
         return error_msg
 
     # Characters validation
+    if holder[0] == "0":
+        return error_msg
     for item in holder:
         if not item.isdigit():
             x += " "
@@ -289,14 +308,11 @@ def calculations():
     for item in mat_loop:
         if item in holder:
             return error_msg
-        else:
-            continue
 
     for item in mathematical_op_for_ver:
         if holder.endswith(item) or holder.startswith(item):
             return error_msg
-        else:
-            continue
+
     # Checks if brackets are validated
     if ")" in holder or "(" in holder:
         for item in holder:
@@ -345,6 +361,8 @@ def calculations():
     # Switch between mathematical operations
     if brackets_tier_3[0] in holder or brackets_tier_3[1] in holder:
         part_1 = brackets(holder)
+        if part_1 == "error":
+            return error_msg
         if mathematical_op_tier_2[0] in part_1 or mathematical_op_tier_2[1] in part_1:
             part_2 = minus_plus_in_div_multi(part_1)
             output = part_2
@@ -358,6 +376,8 @@ def calculations():
     elif mathematical_op_tier_2[0] in holder or mathematical_op_tier_2[1] in holder:
         if mathematical_op_tier_1[0] in holder or mathematical_op_tier_1[1] in holder:
             output_part = minus_plus_in_div_multi(holder)
+            if "error" in output_part:
+                return error_msg
             output = plus_minus_cal(output_part)
 
         elif mathematical_op_tier_2[0] in holder or mathematical_op_tier_2[1] in holder:
