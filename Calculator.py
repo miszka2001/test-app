@@ -18,9 +18,9 @@ def plus_minus_cal(holder_f: str) -> str:
     x = ""
     if "-" in holder_f and "+" in holder_f:
         if "--" in holder_f or "-+" in holder_f or "+-" in holder_f:
-            holder_f.replace("--", "+")
-            holder_f.replace("-+", "-")
-            holder_f.replace("+-", "-")
+            holder_f = holder_f.replace("--", "+")
+            holder_f = holder_f.replace("-+", "-")
+            holder_f = holder_f.replace("+-", "-")
         else:
             if holder_f.count("-") == 1 and holder_f[0] != "-":
                 arr_for_parallel = holder_f.split("-")
@@ -29,7 +29,7 @@ def plus_minus_cal(holder_f: str) -> str:
                 return str(eval("".join(arr_for_parallel)))
             else:
                 return str(eval(holder_f))
-    elif "-" in holder_f and "+" not in holder_f:
+    if "-" in holder_f and "+" not in holder_f:
         return str(eval(holder_f))
     # If pluses only in holder_f
     for k, item in enumerate(holder_f):
@@ -60,21 +60,26 @@ def plus_minus_cal(holder_f: str) -> str:
                     calculation_score.remove(calculation_score[0])
             if len(calculation_score) == 0:
                 break
-            else:
-                continue
         second_stage_of_calculation_f = "".join(map(str, all_characters))
         return plus_minus_cal(second_stage_of_calculation_f)
 
 
 def div_multi_cal(holder_f: str) -> str:
-    if "/0" in holder_f or holder_f[0] == "0":
+    # ZeroDivisionError verification
+    if "/0" in holder_f:
+        return "error"
+    elif holder_f[0] == "0" and holder_f[1] != ".":
         return "error"
     elif "0/" in holder_f:
         for k, i in enumerate(holder_f):
             if i == "/":
-                if holder_f[k-1] == "0":
-                    if not holder_f[k-2].isdigit():
-                        return "error"
+                if holder_f[k - 1] == "0":
+                    if not holder_f[k - 2].isdigit():
+                        if holder_f[k - 2] == ".":
+                            break
+                        else:
+                            return "error"
+    # if everything ok
     all_characters = []
     selected_math_exp = []
     helper_2 = []
@@ -177,7 +182,7 @@ def minus_plus_in_div_multi(holder_f: str) -> str:
     helper = []
     magazine = ""
     for i in range(len(holder_f)):
-        if holder_f[i] == "+" or holder_f == "-":
+        if holder_f[i] == "+" or holder_f[i] == "-":
             helper.append(magazine)
             helper.append(holder_f[i])
             magazine = ""
@@ -238,14 +243,20 @@ def brackets(holder_f: str) -> str:
             storage_all[i] = str(storage_b_score[0])
             storage_b_score.remove(storage_b_score[0])
     zero_division_error_checker = "".join(storage_all)
+    # ZeroDivisionError verification
     if "/0" in zero_division_error_checker or zero_division_error_checker[0] == "0":
+        return "error"
+    elif zero_division_error_checker[0] == "0" and zero_division_error_checker[1] != ".":
         return "error"
     elif "0/" in zero_division_error_checker:
         for k, i in enumerate(zero_division_error_checker):
             if i == "/":
                 if zero_division_error_checker[k-1] == "0":
                     if not zero_division_error_checker[k-2].isdigit():
-                        return "error"
+                        if zero_division_error_checker[k-2] == ".":
+                            return zero_division_error_checker
+                        else:
+                            return "error"
     return "".join(storage_all)
 
 
@@ -361,7 +372,7 @@ def calculations():
     # Switch between mathematical operations
     if brackets_tier_3[0] in holder or brackets_tier_3[1] in holder:
         part_1 = brackets(holder)
-        if part_1 == "error":
+        if "error" in part_1:
             return error_msg
         if mathematical_op_tier_2[0] in part_1 or mathematical_op_tier_2[1] in part_1:
             part_2 = minus_plus_in_div_multi(part_1)
