@@ -16,7 +16,10 @@ def plus_minus_cal(holder_f: str) -> str:
     all_characters = []
     selected_math_exp = []
     x = ""
-    if "-" in holder_f and "+" in holder_f:
+    if holder_f[0] == "-":
+        return str(eval(holder_f))
+
+    if "-" in holder_f or "+" in holder_f:
         if "--" in holder_f or "-+" in holder_f or "+-" in holder_f:
             holder_f = holder_f.replace("--", "+")
             holder_f = holder_f.replace("-+", "-")
@@ -29,8 +32,9 @@ def plus_minus_cal(holder_f: str) -> str:
                 return str(eval("".join(arr_for_parallel)))
             else:
                 return str(eval(holder_f))
-    if "-" in holder_f and "+" not in holder_f:
+    if "-" in holder_f and "+" not in holder_f and holder_f[0] == "-" and holder_f[1] == "-":
         return str(eval(holder_f))
+    holder_f = holder_f.replace("++", "+")
     # If pluses only in holder_f
     for k, item in enumerate(holder_f):
         if k == len(holder_f) - 1:
@@ -85,7 +89,7 @@ def div_multi_cal(holder_f: str) -> str:
     helper_2 = []
     helper_3 = []
     for_minus_output = []
-    if "*-" in holder_f or "/-" in holder_f:
+    if "*-" in holder_f or "/-" in holder_f or "^" in holder_f or "_" in holder_f:
         holder_f = holder_f.replace("*-", "_")
         holder_f = holder_f.replace("/-", "^")
         helper_1 = re.split("[+|-]", holder_f)
@@ -94,12 +98,10 @@ def div_multi_cal(holder_f: str) -> str:
                 helper_3.append(item)
 
         for i in range(len(helper_1)):
-            if "_" in helper_1[i]:
+            if "_" in helper_1[i] or "^" in helper_1[i]:
                 helper_1[i] = helper_1[i].replace("_", "*")
-                helper_2.append(helper_1[i])
-            elif "^" in helper_1[i]:
                 helper_1[i] = helper_1[i].replace("^", "/")
-                helper_2.append(helper_1[i])
+                helper_2.append((helper_1[i]))
 
         brackets_score_f = ray.get([map_r.remote(i, lambda z: -eval(z)) for i in helper_2])
 
@@ -179,6 +181,8 @@ def div_multi_cal(holder_f: str) -> str:
 
 
 def minus_plus_in_div_multi(holder_f: str) -> str:
+    holder_f = holder_f.replace("/-", "^")
+    holder_f = holder_f.replace("*-", "_")
     helper = []
     magazine = ""
     for i in range(len(holder_f)):
@@ -190,7 +194,7 @@ def minus_plus_in_div_multi(holder_f: str) -> str:
             magazine += holder_f[i]
     helper.append(magazine)
     for i in range(len(helper)):
-        if "*" in helper[i] or "/" in helper[i]:
+        if "*" in helper[i] or "/" in helper[i] or "^" in helper[i] or "_" in helper[i]:
             helper[i] = div_multi_cal(helper[i])
     return "".join(helper)
 
@@ -251,9 +255,9 @@ def brackets(holder_f: str) -> str:
     elif "0/" in zero_division_error_checker:
         for k, i in enumerate(zero_division_error_checker):
             if i == "/":
-                if zero_division_error_checker[k-1] == "0":
-                    if not zero_division_error_checker[k-2].isdigit():
-                        if zero_division_error_checker[k-2] == ".":
+                if zero_division_error_checker[k - 1] == "0":
+                    if not zero_division_error_checker[k - 2].isdigit():
+                        if zero_division_error_checker[k - 2] == ".":
                             return zero_division_error_checker
                         else:
                             return "error"
@@ -286,8 +290,8 @@ def calculations():
     forbidden_characters = ";:,?'|!@#$%^&_][{}£§"
     mathematical_op_for_ver = "+-/*"
     math_arr = ["*", "/", "+", "-"]
-    mat_loop = ['**', "//", "-+", "*/", "/*", "-/", "/0",
-                "/-", "/+", "+/", "+*", "*+", "-*", "*-", "..", "--", "++"]
+    mat_loop = ['**', "//", "*/", "/*", "-/", "/0",
+                "/+", "+/", "+*", "*+", "-*", "..", "++"]
     request_data = request.get_json()
     error_msg = jsonify(error='validation error')
     if 'expression' in request_data:
@@ -321,7 +325,10 @@ def calculations():
             return error_msg
 
     for item in mathematical_op_for_ver:
-        if holder.endswith(item) or holder.startswith(item):
+        if item == "-":
+            if holder.endswith(item):
+                return error_msg
+        elif holder.endswith(item) or holder.startswith(item):
             return error_msg
 
     # Checks if brackets are validated
@@ -364,9 +371,13 @@ def calculations():
                 int(holder[i + 1])
             except ValueError:
                 return error_msg
+    # Checks negative numbers
+    if "*-" in holder or "/-" in holder:
+        holder = holder.replace("*-", "_")
+        holder = holder.replace("/-", "^")
     # Variables for calculations
     brackets_tier_3 = "()"
-    mathematical_op_tier_2 = "/*"
+    mathematical_op_tier_2 = "/*^_"
     mathematical_op_tier_1 = "+-"
     output = 0
     # Switch between mathematical operations
@@ -384,14 +395,14 @@ def calculations():
 
         elif mathematical_op_tier_1[0] in part_1 or mathematical_op_tier_1[1] in part_1:
             output = plus_minus_cal(part_1)
-    elif mathematical_op_tier_2[0] in holder or mathematical_op_tier_2[1] in holder:
+    elif mathematical_op_tier_2[0] in holder or mathematical_op_tier_2[1] or "^" in holder or "_" in holder:
         if mathematical_op_tier_1[0] in holder or mathematical_op_tier_1[1] in holder:
             output_part = minus_plus_in_div_multi(holder)
             if "error" in output_part:
                 return error_msg
-            output = plus_minus_cal(output_part)
-
-        elif mathematical_op_tier_2[0] in holder or mathematical_op_tier_2[1] in holder:
+            else:
+                output = plus_minus_cal(output_part)
+        else:
             output = div_multi_cal(holder)
     elif mathematical_op_tier_1[0] in holder or mathematical_op_tier_1[1] in holder:
         output = plus_minus_cal(holder)
