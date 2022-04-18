@@ -13,9 +13,15 @@ def map_r(array, f):
 
 
 def plus_minus_cal(holder_f: str) -> str:
+    holder_f = holder_f.replace("--", "+")
+    holder_f = holder_f.replace("-+", "-")
+    holder_f = holder_f.replace("+-", "-")
+    if "-" not in holder_f and "+" not in holder_f:
+        return holder_f
     all_characters = []
     selected_math_exp = []
     x = ""
+
     if holder_f[0] == "-":
         return str(eval(holder_f))
 
@@ -93,6 +99,8 @@ def div_multi_cal(holder_f: str) -> str:
         holder_f = holder_f.replace("*-", "_")
         holder_f = holder_f.replace("/-", "^")
         helper_1 = re.split("[+|-]", holder_f)
+        minus_div_counter = holder_f.count("_")
+        minus_multi_counter = holder_f.count("^")
         for item in holder_f:
             if item == "-" or item == "+":
                 helper_3.append(item)
@@ -104,6 +112,10 @@ def div_multi_cal(holder_f: str) -> str:
                 helper_2.append((helper_1[i]))
 
         brackets_score_f = ray.get([map_r.remote(i, lambda z: -eval(z)) for i in helper_2])
+        if (minus_multi_counter + minus_div_counter) % 2 == 0:
+            brackets_score_f[0] = str(brackets_score_f[0])
+            brackets_score_f[0] = brackets_score_f[0][1:]
+            brackets_score_f[0] = float(brackets_score_f[0])
 
         for i in range(len(helper_1)):
             if len(brackets_score_f) == 0:
@@ -183,6 +195,8 @@ def div_multi_cal(holder_f: str) -> str:
 def minus_plus_in_div_multi(holder_f: str) -> str:
     holder_f = holder_f.replace("/-", "^")
     holder_f = holder_f.replace("*-", "_")
+    holder_f = holder_f.replace("^-", "/")
+    holder_f = holder_f.replace("_-", "*")
     helper = []
     magazine = ""
     for i in range(len(holder_f)):
@@ -388,7 +402,7 @@ def calculations():
         part_1 = brackets(holder)
         if "error" in part_1:
             return error_msg
-        if mathematical_op_tier_2[0] in part_1 or mathematical_op_tier_2[1] in part_1:
+        if mathematical_op_tier_2[0] in part_1 or mathematical_op_tier_2[1] in part_1 or "^" in part_1 or "_" in part_1:
             part_2 = minus_plus_in_div_multi(part_1)
             output = part_2
 
