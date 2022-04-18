@@ -235,6 +235,9 @@ def brackets(holder_f: str) -> str:
         if storage_b[i].count(")") > 1:
             x = storage_b[i][1:-1]
             storage_b[i] = brackets(x)
+    for i in range(len(storage_b)):
+        storage_b[i] = storage_b[i].replace("_", "*-")
+        storage_b[i] = storage_b[i].replace("^", "/-")
     if len(storage_all) == 1 and len(storage_b) == 1:
         return brackets(holder_f[1:-1])
 
