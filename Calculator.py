@@ -72,14 +72,14 @@ def div_multi_cal(holder_f: str) -> str:
     # ZeroDivisionError verification
     if "/0" in holder_f:
         return "error"
-    elif holder_f[0] == "0" and holder_f[1] != ".":
+    elif holder_f[0] == "0" and holder_f[1] == "/":
         return "error"
     elif "0/" in holder_f:
         for k, i in enumerate(holder_f):
             if i == "/":
                 if holder_f[k - 1] == "0":
                     if not holder_f[k - 2].isdigit():
-                        if holder_f[k - 2] == ".":
+                        if holder_f[k - 2] == "." or holder_f[k - 2] != "/":
                             break
                         else:
                             return "error"
@@ -223,9 +223,9 @@ def brackets(holder_f: str) -> str:
             storage_b_score.remove(storage_b_score[0])
     zero_division_error_checker = "".join(storage_all)
     # ZeroDivisionError verification
-    if "/0" in zero_division_error_checker or zero_division_error_checker[0] == "0":
+    if "/0" in zero_division_error_checker:
         return "error"
-    elif zero_division_error_checker[0] == "0" and zero_division_error_checker[1] != ".":
+    elif zero_division_error_checker[0] == "0" and zero_division_error_checker[1] == "/":
         return "error"
     elif "0/" in zero_division_error_checker:
         for k, i in enumerate(zero_division_error_checker):
