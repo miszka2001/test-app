@@ -389,7 +389,7 @@ def calculations():
         holder = holder.replace("/-", "^")
     # Variables for calculations
     brackets_tier_3 = "()"
-    mathematical_op_tier_2 = "/*^_"
+    mathematical_op_tier_2 = "/*"
     mathematical_op_tier_1 = "+-"
     output = 0
     # Switch between mathematical operations
