@@ -1,5 +1,4 @@
 import string
-import re
 import ray
 from flask import Flask, jsonify, request
 
@@ -84,59 +83,26 @@ def div_multi_cal(holder_f: str) -> str:
                             break
                         else:
                             return "error"
-    # if everything ok
-    all_characters = []
-    selected_math_exp = []
-    helper_2 = []
-    helper_3 = []
-    for_minus_output = []
     if "*-" in holder_f or "/-" in holder_f or "^" in holder_f or "_" in holder_f:
         holder_f = holder_f.replace("*-", "_")
         holder_f = holder_f.replace("/-", "^")
-        helper_1 = re.split("[+|-]", holder_f)
+
         minus_div_counter = holder_f.count("_")
         minus_multi_counter = holder_f.count("^")
-        for item in holder_f:
-            if item == "-" or item == "+":
-                helper_3.append(item)
 
-        for i in range(len(helper_1)):
-            if "_" in helper_1[i] or "^" in helper_1[i]:
-                helper_1[i] = helper_1[i].replace("_", "*")
-                helper_1[i] = helper_1[i].replace("^", "/")
-                helper_2.append((helper_1[i]))
+        holder_f = holder_f.replace("_", "*")
+        holder_f = holder_f.replace("^", "/")
 
-        brackets_score_f = ray.get([map_r.remote(i, lambda z: -eval(z)) for i in helper_2])
         if (minus_multi_counter + minus_div_counter) % 2 == 0:
-            brackets_score_f[0] = str(brackets_score_f[0])
-            brackets_score_f[0] = brackets_score_f[0][1:]
-            brackets_score_f[0] = float(brackets_score_f[0])
+            holder_f = div_multi_cal(holder_f)
+            return holder_f
+        else:
+            holder_f = div_multi_cal(holder_f)
+            return f"-{holder_f}"
 
-        for i in range(len(helper_1)):
-            if len(brackets_score_f) == 0:
-                break
-            if "*" in helper_1[i]:
-                helper_1[i] = brackets_score_f[0]
-            elif "/" in helper_1[i]:
-                helper_1[i] = brackets_score_f[0]
-        while True:
-            for_minus_output.append(helper_1[0])
-            if len(helper_3) == 0:
-                break
-            helper_1.remove(helper_1[0])
-            for_minus_output.append(helper_3[0])
-            helper_3.remove(helper_3[0])
-
-        for_minus_output = list(map(lambda z: str(z), for_minus_output))
-        x = "".join(for_minus_output)
-
-        if x != "":
-            if "/" in x or "*" in x:
-                div_multi_cal(x)
-            else:
-                plus_minus_cal(x)
-            return x
     # If everything ok
+    all_characters = []
+    selected_math_exp = []
     x = ""
     for k, item in enumerate(holder_f):
         if k == len(holder_f) - 1:
@@ -159,30 +125,27 @@ def div_multi_cal(holder_f: str) -> str:
         return holder_f
     elif holder_f.count("*") == 0 and holder_f.count("/") == 1:
         return str(eval(holder_f))
-    else:
-        for i in range(len(selected_math_exp)):
-            if "*-" in selected_math_exp[i]:
-                selected_math_exp[i] = selected_math_exp[i].replace("-", "")
 
-        brackets_score_f = ray.get([map_r.remote(i, lambda z: eval(z)) for i in selected_math_exp])
-        for i in range(len(all_characters)):
-            if len(all_characters[i]) > 1:
-                if "*" in all_characters[i]:
-                    all_characters[i] = brackets_score_f[0]
-                    brackets_score_f.remove(brackets_score_f[0])
-                elif "/" in all_characters[i]:
-                    all_characters[i] = brackets_score_f[0]
-                    brackets_score_f.remove(brackets_score_f[0])
+    brackets_score_f = ray.get([map_r.remote(i, lambda z: eval(z)) for i in selected_math_exp])
+
+    for i in range(len(all_characters)):
+        if len(all_characters[i]) > 1:
+            if "*" in all_characters[i]:
+                all_characters[i] = brackets_score_f[0]
+                brackets_score_f.remove(brackets_score_f[0])
+            elif "/" in all_characters[i]:
+                all_characters[i] = brackets_score_f[0]
+                brackets_score_f.remove(brackets_score_f[0])
             if len(brackets_score_f) == 0:
                 break
             else:
                 continue
-        second_stage_of_calculation_f = ''.join(map(str, all_characters))
+    second_stage_of_calculation_f = ''.join(map(str, all_characters))
 
-        if "*" in second_stage_of_calculation_f:
-            return div_multi_cal(second_stage_of_calculation_f)
-        elif "/" in second_stage_of_calculation_f:
-            return div_multi_cal(second_stage_of_calculation_f)
+    if "*" in second_stage_of_calculation_f:
+        return div_multi_cal(second_stage_of_calculation_f)
+    elif "/" in second_stage_of_calculation_f:
+        return div_multi_cal(second_stage_of_calculation_f)
 
     # Special function for isolation / and * from +-
 
