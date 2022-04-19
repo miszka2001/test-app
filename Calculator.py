@@ -13,34 +13,29 @@ def map_r(array, f):
 
 
 def plus_minus_cal(holder_f: str) -> str:
+    if "-" not in holder_f and "+" not in holder_f:
+        return holder_f
     holder_f = holder_f.replace("--", "+")
     holder_f = holder_f.replace("-+", "-")
     holder_f = holder_f.replace("+-", "-")
-    if "-" not in holder_f and "+" not in holder_f:
-        return holder_f
-    all_characters = []
-    selected_math_exp = []
-    x = ""
-
+    holder_f = holder_f.replace("++", "+")
     if holder_f[0] == "-":
         return str(eval(holder_f))
 
-    if "-" in holder_f or "+" in holder_f:
-        if "--" in holder_f or "-+" in holder_f or "+-" in holder_f:
-            holder_f = holder_f.replace("--", "+")
-            holder_f = holder_f.replace("-+", "-")
-            holder_f = holder_f.replace("+-", "-")
-        else:
-            if holder_f.count("-") == 1 and holder_f[0] != "-":
-                arr_for_parallel = holder_f.split("-")
-                arr_for_parallel[0] = plus_minus_cal(arr_for_parallel[0])
-                arr_for_parallel.insert(1, "-")
-                return str(eval("".join(arr_for_parallel)))
-            else:
-                return str(eval(holder_f))
-    if "-" in holder_f and "+" not in holder_f and holder_f[0] == "-" and holder_f[1] == "-":
+    all_characters = []
+    selected_math_exp = []
+    x = ""
+    if "-" in holder_f and "+" not in holder_f:
         return str(eval(holder_f))
-    holder_f = holder_f.replace("++", "+")
+
+    if "-" in holder_f and "+" in holder_f:
+        if holder_f.count("-") == 1 and holder_f[0] != "-":
+            arr_for_parallel = holder_f.split("-")
+            arr_for_parallel[0] = plus_minus_cal(arr_for_parallel[0])
+            arr_for_parallel.insert(1, "-")
+            return str(eval("".join(arr_for_parallel)))
+        else:
+            return str(eval(holder_f))
     # If pluses only in holder_f
     for k, item in enumerate(holder_f):
         if k == len(holder_f) - 1:
